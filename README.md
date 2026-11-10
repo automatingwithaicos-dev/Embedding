@@ -17,7 +17,7 @@ question ──► embed ──► cosine similarity search ──► top k chun
    - `fastembed` (default) runs the `BAAI/bge-small-en-v1.5` sentence-embedding model locally on CPU. No GPU and no API key needed. It matches by meaning, so "an employee is leaving" finds the offboarding runbook.
    - `tfidf` is a keyword-based fallback with no model download, used by the tests and on offline machines.
 3. **Retrieval** (`rag/store.py`): the question is embedded the same way, and the index returns the chunks with the highest cosine similarity. The index is saved to disk so documents are only embedded once.
-4. **Generation** (`rag/answer.py`): if `ANTHROPIC_API_KEY` is set, Claude answers using only the retrieved passages and cites them. If the best match scores below a relevance threshold, the tool says it doesn't know and suggests escalating, instead of guessing. Without an API key, it shows the best-matching passages.
+4. **Generation** (`rag/answer.py`): a local model (Ollama, LM Studio, or any OpenAI-compatible server) or Claude answers using only the retrieved passages and cites them. If the best match scores below a relevance threshold, the tool says it doesn't know and suggests escalating, instead of guessing. With no model selected, it shows the best-matching passages.
 
 ## Quick start
 
@@ -31,11 +31,21 @@ python -m rag ask "A user's VPN says the server is unreachable" --sources
 python -m rag chat               # interactive mode
 ```
 
-For written answers instead of raw passages:
+For written answers instead of raw passages, pick a model.
+
+**Local model (free, nothing leaves your machine):** start Ollama or LM Studio, then:
+
+```bash
+ollama pull qwen2.5:7b
+python -m rag ask "How do I reset MFA for someone who lost their phone?" --provider local
+# LM Studio: add --base-url http://localhost:1234/v1 --model <model name>
+```
+
+**Claude API:**
 
 ```bash
 export ANTHROPIC_API_KEY=your-key    # Windows PowerShell: $env:ANTHROPIC_API_KEY="your-key"
-python -m rag ask "How do I reset MFA for someone who lost their phone?"
+python -m rag ask "How do I reset MFA for someone who lost their phone?" --provider claude
 ```
 
 No internet for the model download? Use the keyword backend:
